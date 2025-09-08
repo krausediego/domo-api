@@ -37,7 +37,7 @@ export class SessionRepository {
   async update(
     id: Session['id'],
     payload: Partial<Pick<Session, 'userId' | 'active' | 'hash'>>,
-  ): Promise<UndefinedType<Session>> {
+  ): Promise<Session> {
     const session = await this.database.query.sessionsSchema.findFirst({
       where(fields, { eq }) {
         return eq(fields.id, id);

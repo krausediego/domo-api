@@ -8,6 +8,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { apiReference } from '@scalar/nestjs-api-reference';
 import { useContainer } from 'class-validator';
 
 import { AllConfigType } from '@/config';
@@ -52,6 +53,14 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, options);
+
+  app.use(
+    '/reference',
+    apiReference({
+      content: document,
+    }),
+  );
+
   SwaggerModule.setup('docs', app, document);
 
   await app.listen(configService.getOrThrow('app.port', { infer: true }));

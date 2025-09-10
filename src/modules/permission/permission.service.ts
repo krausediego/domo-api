@@ -4,7 +4,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 
-import { IPaginationOptions } from '@/utils/types';
+import { IPaginationOptions, UndefinedType } from '@/utils/types';
 
 import { Permission } from './domain';
 import { PermissionRepository } from './infrastructure';
@@ -23,8 +23,29 @@ export class PermissionService {
     });
   }
 
+  async findById(id: Permission['id']): Promise<Permission> {
+    const permission = await this.permissionRepository.findById(id);
+
+    if (!permission) {
+      throw new UnprocessableEntityException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        errors: {
+          permission: 'permissionNotExists',
+        },
+      });
+    }
+
+    return permission;
+  }
+
+  async findBySlug(
+    slug: Permission['slug'],
+  ): Promise<UndefinedType<Permission>> {
+    return this.permissionRepository.findBySlug(slug);
+  }
+
   async create(data: Pick<Permission, 'name' | 'slug'>): Promise<Permission> {
-    const permission = await this.permissionRepository.findByName(data.name);
+    const permission = await this.permissionRepository.findBySlug(data.slug);
 
     if (permission) {
       throw new UnprocessableEntityException({

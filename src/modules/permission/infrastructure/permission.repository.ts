@@ -27,12 +27,22 @@ export class PermissionRepository {
     return permissions;
   }
 
-  async findByName(
-    name: Permission['name'],
+  async findById(id: Permission['id']): Promise<UndefinedType<Permission>> {
+    const permission = await this.database.query.permissionsSchema.findFirst({
+      where(fields, { eq }) {
+        return eq(fields.id, id);
+      },
+    });
+
+    return permission;
+  }
+
+  async findBySlug(
+    slug: Permission['slug'],
   ): Promise<UndefinedType<Permission>> {
     return this.database.query.permissionsSchema.findFirst({
       where(fields, { eq }) {
-        return eq(fields.name, name);
+        return eq(fields.slug, slug);
       },
     });
   }

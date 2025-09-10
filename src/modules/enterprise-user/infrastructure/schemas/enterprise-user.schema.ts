@@ -6,6 +6,8 @@ import { boolean, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import { enterprisesSchema } from '@/modules/enterprise/infrastructure';
 import { sessionsSchema } from '@/modules/session/infrastructure';
 
+import { enterpriseUserProfilesSchema } from './enterprise-user-profile.schema';
+
 export const enterpriseUsersSchema = pgTable('enterprise_users', {
   id: text('id')
     .$defaultFn(() => randomUUID())
@@ -19,6 +21,7 @@ export const enterpriseUsersSchema = pgTable('enterprise_users', {
   password: text('password').notNull(),
   blocked: boolean('blocked').notNull().default(false),
   tempPassword: boolean('temp_password').notNull().default(true),
+  isSuperUser: boolean('is_super_user').notNull().default(false),
   emailConfirmed: boolean('email_confirmed').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true })
     .defaultNow()
@@ -37,5 +40,6 @@ export const enterpriseUsersRelations = relations(
       references: [enterprisesSchema.id],
     }),
     sessions: many(sessionsSchema),
+    enterpriseUserProfile: one(enterpriseUserProfilesSchema),
   }),
 );

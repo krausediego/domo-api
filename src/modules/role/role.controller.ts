@@ -10,7 +10,6 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
-  ApiCreatedResponse,
   ApiOkResponse,
   ApiParam,
   ApiTags,
@@ -22,27 +21,27 @@ import {
   InfinityPaginationResponseDto,
 } from '@/utils/dto';
 
-import { Permission } from './domain';
-import { CreatePermissionDto, QueryPermissionDto } from './dto';
-import { PermissionService } from './permission.service';
+import { Role, RoleWithRelations } from './domain/role';
+import { CreateRoleDto, QueryRoleDto } from './dto';
+import { RoleService } from './role.service';
 
 @ApiBearerAuth()
-@ApiTags('Permissions')
+@ApiTags('Roles')
 @Controller({
-  path: 'permission',
+  path: 'role',
   version: '1',
 })
-export class PermissionController {
-  constructor(private readonly permissionService: PermissionService) {}
+export class RoleController {
+  constructor(private readonly roleService: RoleService) {}
 
   @ApiOkResponse({
-    type: InfinityPaginationResponse(Permission),
+    type: InfinityPaginationResponse(RoleWithRelations),
   })
   @Get()
   @HttpCode(HttpStatus.OK)
   async findAll(
-    @Query() query: QueryPermissionDto,
-  ): Promise<InfinityPaginationResponseDto<Permission>> {
+    @Query() query: QueryRoleDto,
+  ): Promise<InfinityPaginationResponseDto<RoleWithRelations>> {
     const page = query?.page ?? 1;
     let limit = query?.limit ?? 10;
 
@@ -51,7 +50,7 @@ export class PermissionController {
     }
 
     return infinityPagination(
-      await this.permissionService.findManyWithPagination({
+      await this.roleService.findManyWithPagination({
         paginationOptions: {
           page,
           limit,
@@ -62,7 +61,7 @@ export class PermissionController {
   }
 
   @ApiOkResponse({
-    type: Permission,
+    type: RoleWithRelations,
   })
   @Get(':id')
   @HttpCode(HttpStatus.OK)
@@ -71,16 +70,18 @@ export class PermissionController {
     type: String,
     required: true,
   })
-  findOne(@Param('id') id: Permission['id']): Promise<Permission> {
-    return this.permissionService.findById(id);
+  findOne(@Param('id') id: Role['id']): Promise<RoleWithRelations> {
+    return this.roleService.findById(id);
   }
 
-  @ApiCreatedResponse({
-    type: Permission,
+  @ApiOkResponse({
+    type: RoleWithRelations,
   })
   @Post()
-  @HttpCode(HttpStatus.CREATED)
-  create(@Body() data: CreatePermissionDto): Promise<Permission> {
-    return this.permissionService.create(data);
+  @HttpCode(HttpStatus.OK)
+  async create(
+    @Body() { name, permissionsIds }: CreateRoleDto,
+  ): Promise<RoleWithRelations> {
+    return this.roleService.create(name, permissionsIds);
   }
 }

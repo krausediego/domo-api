@@ -8,6 +8,7 @@ import { mailConfig } from '@/mail';
 
 import { EnterpriseUserModule } from './modules/enterprise-user/enterprise-user.module';
 import { PermissionModule } from './modules/permission/permission.module';
+import { RoleModule } from './modules/role/role.module';
 import { SessionModule } from './modules/session/session.module';
 
 @Module({
@@ -28,6 +29,7 @@ import { SessionModule } from './modules/session/session.module';
     }),
     SessionModule,
     EnterpriseUserModule,
+    RoleModule,
     PermissionModule,
   ],
 })

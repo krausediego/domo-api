@@ -3,7 +3,7 @@ import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import * as schema from '@/database/schemas';
 
-import { EnterpriseUser } from '../domain';
+import { EnterpriseUser, EnterpriseUserProfile } from '../domain';
 
 @Injectable()
 export class EnterpriseUserRepository {
@@ -12,12 +12,23 @@ export class EnterpriseUserRepository {
     private readonly database: PostgresJsDatabase<typeof schema>,
   ) {}
 
-  async create(data: EnterpriseUser): Promise<EnterpriseUser> {
+  async createUser(data: EnterpriseUser): Promise<EnterpriseUser> {
     const [user] = await this.database
       .insert(schema.enterpriseUsersSchema)
       .values({ ...data })
       .returning();
 
     return user;
+  }
+
+  async createUserProfile(
+    data: EnterpriseUserProfile,
+  ): Promise<EnterpriseUserProfile> {
+    const [userProfile] = await this.database
+      .insert(schema.enterpriseUserProfilesSchema)
+      .values({ ...data })
+      .returning();
+
+    return userProfile;
   }
 }

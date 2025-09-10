@@ -1,25 +1,8 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  Post,
-  Query,
-} from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOkResponse,
-  ApiParam,
-  ApiTags,
-} from '@nestjs/swagger';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiOkResponse, ApiParam, ApiTags } from '@nestjs/swagger';
 
 import { infinityPagination } from '@/utils';
-import {
-  InfinityPaginationResponse,
-  InfinityPaginationResponseDto,
-} from '@/utils/dto';
+import { InfinityPaginationResponse, InfinityPaginationResponseDto } from '@/utils/dto';
 
 import { Role, RoleWithRelations } from './domain/role';
 import { CreateRoleDto, QueryRoleDto } from './dto';
@@ -34,14 +17,22 @@ import { RoleService } from './role.service';
 export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 
+  /**
+   * Get route find all roles with pagination
+   *
+   * @async
+   * @param query {QueryRoleDto}
+   *
+   * @returns {Promise<InfinityPaginationResponseDto<RoleWithRelations>>}
+   *
+   * @throws {Error}
+   */
   @ApiOkResponse({
     type: InfinityPaginationResponse(RoleWithRelations),
   })
   @Get()
   @HttpCode(HttpStatus.OK)
-  async findAll(
-    @Query() query: QueryRoleDto,
-  ): Promise<InfinityPaginationResponseDto<RoleWithRelations>> {
+  async findAll(@Query() query: QueryRoleDto): Promise<InfinityPaginationResponseDto<RoleWithRelations>> {
     const page = query?.page ?? 1;
     let limit = query?.limit ?? 10;
 
@@ -60,6 +51,16 @@ export class RoleController {
     );
   }
 
+  /**
+   * Get route find role by id
+   *
+   * @async
+   * @param id {Role['id']}
+   *
+   * @returns {Promise<RoleWithRelations>}
+   *
+   * @throws {Error}
+   */
   @ApiOkResponse({
     type: RoleWithRelations,
   })
@@ -74,14 +75,22 @@ export class RoleController {
     return this.roleService.findById(id);
   }
 
+  /**
+   * Post route create new role
+   *
+   * @async
+   * @param body {CreateRoleDto}
+   *
+   * @returns {Promise<RoleWithRelations>}
+   *
+   * @throws {Error}
+   */
   @ApiOkResponse({
     type: RoleWithRelations,
   })
   @Post()
   @HttpCode(HttpStatus.OK)
-  async create(
-    @Body() { name, permissionsIds }: CreateRoleDto,
-  ): Promise<RoleWithRelations> {
-    return this.roleService.create(name, permissionsIds);
+  async create(@Body() { name, slug, permissionsIds }: CreateRoleDto): Promise<RoleWithRelations> {
+    return this.roleService.create({ name, slug }, permissionsIds);
   }
 }

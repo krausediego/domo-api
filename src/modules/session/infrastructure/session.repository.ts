@@ -15,6 +15,16 @@ export class SessionRepository {
     private readonly database: PostgresJsDatabase<typeof schema>,
   ) {}
 
+  /**
+   * Find session by id
+   *
+   * @async
+   * @param id {Session['id']}
+   *
+   * @returns {Promise<UndefinedType<Session>>}
+   *
+   * @throws {Error}
+   */
   async findById(id: Session['id']): Promise<UndefinedType<Session>> {
     const session = await this.database.query.sessionsSchema.findFirst({
       where(fields, { eq }) {
@@ -25,6 +35,16 @@ export class SessionRepository {
     return session;
   }
 
+  /**
+   * Create a new session
+   *
+   * @async
+   * @param data {Pick<Session, 'userId' | 'hash'>}
+   *
+   * @returns {Promise<Session>}
+   *
+   * @throws {Error}
+   */
   async create(data: Pick<Session, 'userId' | 'hash'>): Promise<Session> {
     const [session] = await this.database
       .insert(schema.sessionsSchema)
@@ -34,10 +54,18 @@ export class SessionRepository {
     return session;
   }
 
-  async update(
-    id: Session['id'],
-    payload: Partial<Pick<Session, 'userId' | 'active' | 'hash'>>,
-  ): Promise<Session> {
+  /**
+   * Update session by id
+   *
+   * @async
+   * @param id {Session['id']}
+   * @param payload {Partial<Session>}
+   *
+   * @returns {Promise<Session>}
+   *
+   * @throws {Error}
+   */
+  async update(id: Session['id'], payload: Partial<Session>): Promise<Session> {
     const session = await this.database.query.sessionsSchema.findFirst({
       where(fields, { eq }) {
         return eq(fields.id, id);
@@ -59,16 +87,31 @@ export class SessionRepository {
     return updatedSession;
   }
 
+  /**
+   * Inactivate session by id
+   *
+   * @async
+   * @param id {Session['id']}
+   *
+   * @returns {Promise<void>}
+   *
+   * @throws {Error}
+   */
   async inactivateById(id: Session['id']): Promise<void> {
-    await this.database
-      .update(schema.sessionsSchema)
-      .set({ active: false })
-      .where(eq(schema.sessionsSchema.id, id));
+    await this.database.update(schema.sessionsSchema).set({ active: false }).where(eq(schema.sessionsSchema.id, id));
   }
 
-  async inactivateByUserId(conditions: {
-    userId: EnterpriseUser['id'];
-  }): Promise<void> {
+  /**
+   * Inactivate session by user id
+   *
+   * @async
+   * @param conditions {EnterpriseUser['id']}
+   *
+   * @returns {Promise<void>}
+   *
+   * @throws {Error}
+   */
+  async inactivateByUserId(conditions: { userId: EnterpriseUser['id'] }): Promise<void> {
     await this.database
       .update(schema.sessionsSchema)
       .set({ active: false })

@@ -7,6 +7,10 @@ export class CreateRoleDto {
   name: string;
 
   @ApiProperty()
+  @IsNotEmpty()
+  slug: string;
+
+  @ApiProperty()
   @IsArray()
   @IsString({ each: true })
   @ArrayMinSize(1)

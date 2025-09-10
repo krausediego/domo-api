@@ -21,25 +21,20 @@ export const rolePermissionsSchema = pgTable('role_permissions', {
       onDelete: 'cascade',
     })
     .notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true })
-    .defaultNow()
-    .notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true })
     .defaultNow()
     .$onUpdate(() => sql`(CURRENT_TIMESTAMP)`)
     .notNull(),
 });
 
-export const rolePermissionsRelations = relations(
-  rolePermissionsSchema,
-  ({ one }) => ({
-    role: one(rolesSchema, {
-      fields: [rolePermissionsSchema.roleId],
-      references: [rolesSchema.id],
-    }),
-    permission: one(permissionsSchema, {
-      fields: [rolePermissionsSchema.permissionId],
-      references: [permissionsSchema.id],
-    }),
+export const rolePermissionsRelations = relations(rolePermissionsSchema, ({ one }) => ({
+  role: one(rolesSchema, {
+    fields: [rolePermissionsSchema.roleId],
+    references: [rolesSchema.id],
   }),
-);
+  permission: one(permissionsSchema, {
+    fields: [rolePermissionsSchema.permissionId],
+    references: [permissionsSchema.id],
+  }),
+}));

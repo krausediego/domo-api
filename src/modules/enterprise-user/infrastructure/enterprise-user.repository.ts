@@ -12,7 +12,17 @@ export class EnterpriseUserRepository {
     private readonly database: PostgresJsDatabase<typeof schema>,
   ) {}
 
-  async createUser(data: EnterpriseUser): Promise<EnterpriseUser> {
+  /**
+   * Create a new user
+   *
+   * @async
+   * @param data {Pick<EnterpriseUser, 'enterpriseId' | 'email' | 'password'>}
+   *
+   * @returns {Promise<EnterpriseUser>}
+   *
+   * @throws {Error}
+   */
+  async createUser(data: Pick<EnterpriseUser, 'enterpriseId' | 'email' | 'password'>): Promise<EnterpriseUser> {
     const [user] = await this.database
       .insert(schema.enterpriseUsersSchema)
       .values({ ...data })
@@ -21,8 +31,18 @@ export class EnterpriseUserRepository {
     return user;
   }
 
+  /**
+   *  Create a new user profile infos
+   *
+   *  @async
+   *  @param data {Omit<EnterpriseUserProfile, 'id' | 'createdAd' | 'UpdatedAt'>}
+   *
+   *  @returns {Promise<EnterpriseUserProfile>}
+   *
+   *  @throws {Error}
+   */
   async createUserProfile(
-    data: EnterpriseUserProfile,
+    data: Omit<EnterpriseUserProfile, 'id' | 'createdAd' | 'UpdatedAt'>,
   ): Promise<EnterpriseUserProfile> {
     const [userProfile] = await this.database
       .insert(schema.enterpriseUserProfilesSchema)

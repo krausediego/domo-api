@@ -12,9 +12,7 @@ export const rolesSchema = pgTable('roles', {
   name: text('name').notNull(),
   slug: text('slug').notNull().unique(),
   active: boolean('active').notNull().default(true),
-  createdAt: timestamp('created_at', { withTimezone: true })
-    .defaultNow()
-    .notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true })
     .defaultNow()
     .$onUpdate(() => sql`(CURRENT_TIMESTAMP)`)

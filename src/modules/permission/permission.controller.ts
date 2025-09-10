@@ -1,26 +1,8 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  Post,
-  Query,
-} from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiCreatedResponse,
-  ApiOkResponse,
-  ApiParam,
-  ApiTags,
-} from '@nestjs/swagger';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiParam, ApiTags } from '@nestjs/swagger';
 
 import { infinityPagination } from '@/utils';
-import {
-  InfinityPaginationResponse,
-  InfinityPaginationResponseDto,
-} from '@/utils/dto';
+import { InfinityPaginationResponse, InfinityPaginationResponseDto } from '@/utils/dto';
 
 import { Permission } from './domain';
 import { CreatePermissionDto, QueryPermissionDto } from './dto';
@@ -35,14 +17,22 @@ import { PermissionService } from './permission.service';
 export class PermissionController {
   constructor(private readonly permissionService: PermissionService) {}
 
+  /**
+   * Get route find all permissions with pagination
+   *
+   * @async
+   * @param query {QueryPermissionDto}
+   *
+   * @returns {Promise<InfinityPaginationResponseDto<Permission>>}
+   *
+   * @throws {Error}
+   */
   @ApiOkResponse({
     type: InfinityPaginationResponse(Permission),
   })
   @Get()
   @HttpCode(HttpStatus.OK)
-  async findAll(
-    @Query() query: QueryPermissionDto,
-  ): Promise<InfinityPaginationResponseDto<Permission>> {
+  async findAll(@Query() query: QueryPermissionDto): Promise<InfinityPaginationResponseDto<Permission>> {
     const page = query?.page ?? 1;
     let limit = query?.limit ?? 10;
 
@@ -61,6 +51,16 @@ export class PermissionController {
     );
   }
 
+  /**
+   * Get route find permission by id
+   *
+   * @async
+   * @param id {Permission['id']}
+   *
+   * @returns {Promise<Permission>}
+   *
+   * @throws {Error}
+   */
   @ApiOkResponse({
     type: Permission,
   })
@@ -75,6 +75,16 @@ export class PermissionController {
     return this.permissionService.findById(id);
   }
 
+  /**
+   * Post route create a new permission
+   *
+   * @async
+   * @param body {CreatePermissionDto}
+   *
+   * @returns {Promise<Permission>}
+   *
+   * @throws {Error}
+   */
   @ApiCreatedResponse({
     type: Permission,
   })

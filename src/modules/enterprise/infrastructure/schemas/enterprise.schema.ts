@@ -15,14 +15,9 @@ export const enterprisesSchema = pgTable('enterprises', {
   logoUrl: text('logo_url'),
   description: text('description'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(
-    () => sql`(CURRENT_TIMESTAMP)`,
-  ),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(() => sql`(CURRENT_TIMESTAMP)`),
 });
 
-export const enterprisesRelations = relations(
-  enterprisesSchema,
-  ({ many }) => ({
-    enterpriseUsers: many(enterpriseUsersSchema),
-  }),
-);
+export const enterprisesRelations = relations(enterprisesSchema, ({ many }) => ({
+  enterpriseUsers: many(enterpriseUsersSchema),
+}));

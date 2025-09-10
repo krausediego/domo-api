@@ -16,9 +16,7 @@ export const sessionsSchema = pgTable('sessions', {
     .notNull(),
   hash: text('hash').notNull(),
   active: boolean('active').notNull().default(true),
-  createdAt: timestamp('created_at', { withTimezone: true })
-    .defaultNow()
-    .notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true })
     .defaultNow()
     .$onUpdate(() => sql`(CURRENT_TIMESTAMP)`)

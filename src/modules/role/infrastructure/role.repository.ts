@@ -17,6 +17,16 @@ export class RoleRepository {
     private readonly database: PostgresJsDatabase<typeof schema>,
   ) {}
 
+  /**
+   * Find roles with pagination
+   *
+   * @async
+   * @param paginationOptions {IPaginationOptions}
+   *
+   * @returns {Promise<RoleWithRelations[]>}
+   *
+   * @throws {Error}
+   */
   async findManyWithPagination({
     paginationOptions,
   }: {
@@ -43,15 +53,19 @@ export class RoleRepository {
       limit: paginationOptions.limit,
     });
 
-    return flattenManyToMany(
-      role,
-      'rolePermission',
-      'permission',
-      'permissions',
-      'id',
-    );
+    return flattenManyToMany(role, 'rolePermission', 'permission', 'permissions', 'id');
   }
 
+  /**
+   * Find role by id
+   *
+   * @async
+   * @param id {Role['id']}
+   *
+   * @returns {Promise<UndefinedType<RoleWithRelations>>}
+   *
+   * @throws {Error}
+   */
   async findById(id: Role['id']): Promise<UndefinedType<RoleWithRelations>> {
     const role = await this.database.query.rolesSchema.findFirst({
       where(fields, { eq }) {
@@ -73,13 +87,7 @@ export class RoleRepository {
     });
 
     if (role) {
-      const [flattenData] = flattenManyToMany(
-        [role],
-        'rolePermission',
-        'permission',
-        'permissions',
-        'id',
-      );
+      const [flattenData] = flattenManyToMany([role], 'rolePermission', 'permission', 'permissions', 'id');
 
       return flattenData;
     }
@@ -87,9 +95,17 @@ export class RoleRepository {
     return role;
   }
 
-  async findBySlug(
-    slug: Role['slug'],
-  ): Promise<UndefinedType<RoleWithRelations>> {
+  /**
+   * Find role by slug
+   *
+   * @async
+   * @param slug {Role['slug']}
+   *
+   * @returns {Promise<UndefinedType<RoleWithRelations>>}
+   *
+   * @throws {Error}
+   */
+  async findBySlug(slug: Role['slug']): Promise<UndefinedType<RoleWithRelations>> {
     const role = await this.database.query.rolesSchema.findFirst({
       where(fields, { eq }) {
         return eq(fields.slug, slug);
@@ -110,13 +126,7 @@ export class RoleRepository {
     });
 
     if (role) {
-      const [flattenData] = flattenManyToMany(
-        [role],
-        'rolePermission',
-        'permission',
-        'permissions',
-        'id',
-      );
+      const [flattenData] = flattenManyToMany([role], 'rolePermission', 'permission', 'permissions', 'id');
 
       return flattenData;
     }
@@ -124,10 +134,18 @@ export class RoleRepository {
     return role;
   }
 
-  async create(
-    data: Pick<Role, 'name' | 'slug'>,
-    permissionsIds: Permission['id'][],
-  ): Promise<RoleWithRelations> {
+  /**
+   * Create a new role
+   *
+   * @async
+   * @param data {Pick<Role, 'name' | 'slug'>}
+   * @param permissionsIds {Permission['id'][]}
+   *
+   * @returns {Promise<RoleWithRelations>}
+   *
+   * @throws {Error}
+   */
+  async create(data: Pick<Role, 'name' | 'slug'>, permissionsIds: Permission['id'][]): Promise<RoleWithRelations> {
     const [role] = await this.database
       .insert(rolesSchema)
       .values({ ...data })
@@ -140,9 +158,7 @@ export class RoleRepository {
       };
     });
 
-    await this.database
-      .insert(rolePermissionsSchema)
-      .values(permissionsInsertData);
+    await this.database.insert(rolePermissionsSchema).values(permissionsInsertData);
 
     const roleDataReturning = await this.database.query.rolesSchema.findFirst({
       where(fields, { eq }) {
@@ -167,17 +183,22 @@ export class RoleRepository {
       throw new Error('Role not found');
     }
 
-    const [flattenData] = flattenManyToMany(
-      [roleDataReturning],
-      'rolePermission',
-      'permission',
-      'permissions',
-      'id',
-    );
+    const [flattenData] = flattenManyToMany([roleDataReturning], 'rolePermission', 'permission', 'permissions', 'id');
 
     return flattenData;
   }
 
+  /**
+   * Update a permission by id
+   *
+   * @async
+   * @param id {Role['id']}
+   * @param payload {Partial<Role>}
+   *
+   * @returns {Promise<Role>}
+   *
+   * @throws {Error}
+   */
   async update(id: Role['id'], payload: Partial<Role>): Promise<Role> {
     const [role] = await this.database
       .update(rolesSchema)
@@ -188,26 +209,35 @@ export class RoleRepository {
     return role;
   }
 
-  async addPermission(
-    roleId: Role['id'],
-    permissionId: Permission['id'],
-  ): Promise<void> {
-    await this.database
-      .insert(rolePermissionsSchema)
-      .values({ roleId, permissionId });
+  /**
+   * Add new permission in exists role
+   *
+   * @async
+   * @param roleId {Role['id']}
+   * @param permissionId {Permission['id']}
+   *
+   * @returns {Promise<void>}
+   *
+   * @throws {Error}
+   */
+  async addPermission(roleId: Role['id'], permissionId: Permission['id']): Promise<void> {
+    await this.database.insert(rolePermissionsSchema).values({ roleId, permissionId });
   }
 
-  async removePermission(
-    roleId: Role['id'],
-    permissionId: Permission['id'],
-  ): Promise<void> {
+  /**
+   * Remove permission in exists role
+   *
+   * @async
+   * @param roleId {Role['id']}
+   * @param permissionId {Permission['id']}
+   *
+   * @returns {Promise<void>}
+   *
+   * @throws {Error}
+   */
+  async removePermission(roleId: Role['id'], permissionId: Permission['id']): Promise<void> {
     await this.database
       .delete(rolePermissionsSchema)
-      .where(
-        and(
-          eq(rolePermissionsSchema.roleId, roleId),
-          eq(rolePermissionsSchema.permissionId, permissionId),
-        ),
-      );
+      .where(and(eq(rolePermissionsSchema.roleId, roleId), eq(rolePermissionsSchema.permissionId, permissionId)));
   }
 }

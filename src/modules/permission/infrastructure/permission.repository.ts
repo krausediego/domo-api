@@ -14,6 +14,16 @@ export class PermissionRepository {
     private readonly database: PostgresJsDatabase<typeof schema>,
   ) {}
 
+  /**
+   * Find many permissions with pagination
+   *
+   * @async
+   * @param paginationOptions {IPaginationOptions}
+   *
+   * @returns {Promise<Permission[]>}
+   *
+   * @throws {Error}
+   */
   async findManyWithPagination({
     paginationOptions,
   }: {
@@ -27,6 +37,16 @@ export class PermissionRepository {
     return permissions;
   }
 
+  /**
+   * Find permission by id
+   *
+   * @async
+   * @param id {Permission['id']}
+   *
+   * @returns {Promise<UndefinedType<Permission>>}
+   *
+   * @throws {Error}
+   */
   async findById(id: Permission['id']): Promise<UndefinedType<Permission>> {
     const permission = await this.database.query.permissionsSchema.findFirst({
       where(fields, { eq }) {
@@ -37,9 +57,17 @@ export class PermissionRepository {
     return permission;
   }
 
-  async findBySlug(
-    slug: Permission['slug'],
-  ): Promise<UndefinedType<Permission>> {
+  /**
+   * Find permission by slug
+   *
+   * @async
+   * @param slug {Permission['slug']}
+   *
+   * @returns {Promise<UndefinedType<Permission>>}
+   *
+   * @throws {Error}
+   */
+  async findBySlug(slug: Permission['slug']): Promise<UndefinedType<Permission>> {
     return this.database.query.permissionsSchema.findFirst({
       where(fields, { eq }) {
         return eq(fields.slug, slug);
@@ -47,6 +75,16 @@ export class PermissionRepository {
     });
   }
 
+  /**
+   * Create new permission
+   *
+   * @async
+   * @param data {Pick<Permission, 'name' | 'slug'>}
+   *
+   * @returns {Promise<Permission>}
+   *
+   * @throws {Error}
+   */
   async create(data: Pick<Permission, 'name' | 'slug'>): Promise<Permission> {
     const [permission] = await this.database
       .insert(schema.permissionsSchema)
@@ -56,10 +94,18 @@ export class PermissionRepository {
     return permission;
   }
 
-  async update(
-    id: Permission['id'],
-    payload: Pick<Permission, 'name' | 'slug'>,
-  ): Promise<Permission> {
+  /**
+   * Update permission by id
+   *
+   * @async
+   * @param id {Permission['id']}
+   * @param payload {Partial<Permission>}
+   *
+   * @returns {Promise<Permission>}
+   *
+   * @throws {Error}
+   */
+  async update(id: Permission['id'], payload: Partial<Permission>): Promise<Permission> {
     const permission = await this.database.query.permissionsSchema.findFirst({
       where(fields, { eq }) {
         return eq(fields.id, id);

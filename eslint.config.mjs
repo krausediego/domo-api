@@ -6,6 +6,7 @@ import tseslint from 'typescript-eslint';
 import { defineConfig } from 'eslint/config';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
+import eslintConfigPrettier from 'eslint-config-prettier/flat';
 
 export default defineConfig(
   {
@@ -14,6 +15,7 @@ export default defineConfig(
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
   eslintPluginPrettierRecommended,
+  eslintConfigPrettier,
   {
     languageOptions: {
       globals: {
@@ -43,6 +45,14 @@ export default defineConfig(
       '@typescript-eslint/no-unsafe-member-access': 'off',
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
+      'prettier/prettier': [
+        'error',
+        {
+          singleQuote: true,
+          trailingComma: 'all',
+          printWidth: 120,
+        },
+      ],
     },
   },
 );

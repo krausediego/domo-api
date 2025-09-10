@@ -1,8 +1,4 @@
-import {
-  HttpStatus,
-  Injectable,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { HttpStatus, Injectable, UnprocessableEntityException } from '@nestjs/common';
 
 import { IPaginationOptions, UndefinedType } from '@/utils/types';
 
@@ -13,6 +9,16 @@ import { PermissionRepository } from './infrastructure';
 export class PermissionService {
   constructor(private readonly permissionRepository: PermissionRepository) {}
 
+  /**
+   * Find many permissions with pagination
+   *
+   * @async
+   * @param paginationOptions {IPaginationOptions}
+   *
+   * @returns {Promise<Permission[]>}
+   *
+   * @throws {Error}
+   */
   async findManyWithPagination({
     paginationOptions,
   }: {
@@ -23,6 +29,16 @@ export class PermissionService {
     });
   }
 
+  /**
+   * Find permission by id
+   *
+   * @async
+   * @param id {Permission['id']}
+   *
+   * @returns {Promise<Permission>}
+   *
+   * @throws {Error}
+   */
   async findById(id: Permission['id']): Promise<Permission> {
     const permission = await this.permissionRepository.findById(id);
 
@@ -38,12 +54,30 @@ export class PermissionService {
     return permission;
   }
 
-  async findBySlug(
-    slug: Permission['slug'],
-  ): Promise<UndefinedType<Permission>> {
+  /**
+   * Find permission by slug
+   *
+   * @async
+   * @param slug {Permission['slug']}
+   *
+   * @returns {Promise<UndefinedType<Permission>>}
+   *
+   * @throws {Error}
+   */
+  async findBySlug(slug: Permission['slug']): Promise<UndefinedType<Permission>> {
     return this.permissionRepository.findBySlug(slug);
   }
 
+  /**
+   * Create a new permission
+   *
+   * @async
+   * @param data {Pick<Permission, 'name' | 'slug'>}
+   *
+   * @returns {Promise<Permission>}
+   *
+   * @throws {Error}
+   */
   async create(data: Pick<Permission, 'name' | 'slug'>): Promise<Permission> {
     const permission = await this.permissionRepository.findBySlug(data.slug);
 
@@ -59,10 +93,18 @@ export class PermissionService {
     return this.permissionRepository.create(data);
   }
 
-  async update(
-    id: Permission['id'],
-    payload: Pick<Permission, 'name' | 'slug'>,
-  ): Promise<Permission> {
+  /**
+   * Update permission by id
+   *
+   * @async
+   * @param id {Permission['id']}
+   * @param payload {Partial<Permission>}
+   *
+   * @returns {Promise<Permission>}
+   *
+   * @throws {Error}
+   */
+  async update(id: Permission['id'], payload: Partial<Permission>): Promise<Permission> {
     return this.permissionRepository.update(id, payload);
   }
 }

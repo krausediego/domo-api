@@ -23,23 +23,18 @@ export const enterpriseUsersSchema = pgTable('enterprise_users', {
   tempPassword: boolean('temp_password').notNull().default(true),
   isSuperUser: boolean('is_super_user').notNull().default(false),
   emailConfirmed: boolean('email_confirmed').notNull().default(false),
-  createdAt: timestamp('created_at', { withTimezone: true })
-    .defaultNow()
-    .notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true })
     .defaultNow()
     .$onUpdate(() => sql`(CURRENT_TIMESTAMP)`)
     .notNull(),
 });
 
-export const enterpriseUsersRelations = relations(
-  enterpriseUsersSchema,
-  ({ one, many }) => ({
-    enterprise: one(enterprisesSchema, {
-      fields: [enterpriseUsersSchema.enterpriseId],
-      references: [enterprisesSchema.id],
-    }),
-    sessions: many(sessionsSchema),
-    enterpriseUserProfile: one(enterpriseUserProfilesSchema),
+export const enterpriseUsersRelations = relations(enterpriseUsersSchema, ({ one, many }) => ({
+  enterprise: one(enterprisesSchema, {
+    fields: [enterpriseUsersSchema.enterpriseId],
+    references: [enterprisesSchema.id],
   }),
-);
+  sessions: many(sessionsSchema),
+  enterpriseUserProfile: one(enterpriseUserProfilesSchema),
+}));

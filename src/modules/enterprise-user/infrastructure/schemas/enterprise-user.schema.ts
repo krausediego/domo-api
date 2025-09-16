@@ -1,12 +1,13 @@
 import { randomUUID } from 'node:crypto';
 
-import { relations, sql } from 'drizzle-orm';
+import { relations } from 'drizzle-orm';
 import { boolean, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 import { enterprisesSchema } from '@/modules/enterprise/infrastructure';
 import { sessionsSchema } from '@/modules/session/infrastructure';
 
 import { enterpriseUserProfilesSchema } from './enterprise-user-profile.schema';
+import { enterpriseUserRolesSchema } from './enterprise-user-role.schema';
 
 export const enterpriseUsersSchema = pgTable('enterprise_users', {
   id: text('id')
@@ -26,7 +27,7 @@ export const enterpriseUsersSchema = pgTable('enterprise_users', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true })
     .defaultNow()
-    .$onUpdate(() => sql`(CURRENT_TIMESTAMP)`)
+    .$onUpdate(() => new Date())
     .notNull(),
 });
 
@@ -37,4 +38,5 @@ export const enterpriseUsersRelations = relations(enterpriseUsersSchema, ({ one,
   }),
   sessions: many(sessionsSchema),
   enterpriseUserProfile: one(enterpriseUserProfilesSchema),
+  enterpriseUserRole: many(enterpriseUserRolesSchema),
 }));

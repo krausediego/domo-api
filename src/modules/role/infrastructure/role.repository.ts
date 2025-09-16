@@ -130,8 +130,6 @@ export class RoleRepository {
 
       return flattenData;
     }
-
-    return role;
   }
 
   /**

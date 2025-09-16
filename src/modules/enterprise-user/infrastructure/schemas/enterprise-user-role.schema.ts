@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import { relations, sql } from 'drizzle-orm';
+import { relations } from 'drizzle-orm';
 import { pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 import { rolesSchema } from '@/database/schemas';
@@ -20,7 +20,7 @@ export const enterpriseUserRolesSchema = pgTable('enterprise_user_roles', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true })
     .defaultNow()
-    .$onUpdate(() => sql`(CURRENT_TIMESTAMP)`)
+    .$onUpdate(() => new Date())
     .notNull(),
 });
 

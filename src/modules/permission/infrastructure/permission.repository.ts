@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import * as schema from '@/database/schemas';
+import { Role } from '@/modules/role/domain/role';
 import { IPaginationOptions, UndefinedType } from '@/utils/types';
 
 import { Permission } from '../domain';
@@ -73,6 +74,33 @@ export class PermissionRepository {
         return eq(fields.slug, slug);
       },
     });
+  }
+
+  /**
+   * Find permissions slugs by role id
+   *
+   * @async
+   * @param roleId {Role['id']}
+   *
+   * @returns {Promise<Permission['slug'][]}
+   *
+   * @throws {Error}
+   *
+   */
+  async findSlugByRoleId(roleId: Role['id']): Promise<Permission['slug'][]> {
+    const permissions = await this.database
+      .select({
+        slug: schema.permissionsSchema.slug,
+      })
+      .from(schema.permissionsSchema)
+      .leftJoin(
+        schema.rolePermissionsSchema,
+        eq(schema.permissionsSchema.id, schema.rolePermissionsSchema.permissionId),
+      )
+      .where(eq(schema.rolePermissionsSchema.roleId, roleId))
+      .then((rows) => rows.map((row) => row.slug));
+
+    return permissions;
   }
 
   /**

@@ -2,6 +2,7 @@ import { HttpStatus, Injectable, UnprocessableEntityException } from '@nestjs/co
 
 import { IPaginationOptions, UndefinedType } from '@/utils/types';
 
+import { Role } from '../role/domain/role';
 import { Permission } from './domain';
 import { PermissionRepository } from './infrastructure';
 
@@ -66,6 +67,23 @@ export class PermissionService {
    */
   async findBySlug(slug: Permission['slug']): Promise<UndefinedType<Permission>> {
     return this.permissionRepository.findBySlug(slug);
+  }
+
+  /**
+   * Find permissions slugs by role id
+   *
+   * @async
+   */
+  async findSlugsByRoleId(rolesIds: Role['id'][]): Promise<Permission['slug'][]> {
+    const results = await Promise.all(
+      rolesIds.map(async (roleId) => {
+        return this.permissionRepository.findSlugByRoleId(roleId);
+      }),
+    );
+
+    const allSlugs = results.flat();
+
+    return [...new Set(allSlugs)];
   }
 
   /**

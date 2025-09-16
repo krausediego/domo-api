@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -11,9 +10,7 @@ async function run() {
   // monta exports relativos a partir de src/database/schemas
   const lines = files.sort().map((p) => {
     const noExt = p.replace(/\.ts$/, '');
-    const rel = path
-      .relative('src/database/schemas', noExt)
-      .replace(/\\/g, '/');
+    const rel = path.relative('src/database/schemas', noExt).replace(/\\/g, '/');
     return `export * from "./${rel}";`;
   });
 
@@ -22,14 +19,7 @@ async function run() {
    */\n`;
 
   await fs.mkdir('src/database/schemas', { recursive: true });
-  await fs.writeFile(
-    'src/database/schemas/index.ts',
-    header + lines.join('\n') + '\n',
-  );
-
-  console.log(
-    `✅ Gerado src/database/schemas/index.ts com ${files.length} schemas.`,
-  );
+  await fs.writeFile('src/database/schemas/index.ts', header + lines.join('\n') + '\n');
 }
 
 run().catch((e) => {

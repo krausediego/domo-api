@@ -1,3 +1,7 @@
+import { Role } from '@/modules/role/domain/role';
+
+import { EnterpriseUserProfile } from '.';
+
 export class EnterpriseUser {
   id: string;
   enterpriseId: string;
@@ -10,12 +14,7 @@ export class EnterpriseUser {
   updatedAt: Date;
 }
 
-export class EnterpriseUserProfile {
-  id: string;
-  userId: string;
-  name: string;
-  cellPhone: string;
-  avatarUrl: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+export class EnterpriseUserWithRelations extends EnterpriseUser {
+  enterpriseUserProfile: EnterpriseUserProfile | null;
+  roles: Pick<Role, 'id' | 'slug'>[];
 }

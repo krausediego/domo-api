@@ -53,6 +53,31 @@ export class RoleService {
   }
 
   /**
+   * Find role by slug
+   *
+   * @async
+   * @param slug {Role['slug']}
+   *
+   * @returns {Promise<RoleWithRelations>}
+   *
+   * @throws {Error}
+   */
+  async findBySlug(slug: Role['slug']): Promise<RoleWithRelations> {
+    const role = await this.roleRepository.findBySlug(slug);
+
+    if (!role) {
+      throw new UnprocessableEntityException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        errors: {
+          permission: 'roleNotExists',
+        },
+      });
+    }
+
+    return role;
+  }
+
+  /**
    * Create a new role
    *
    * @async

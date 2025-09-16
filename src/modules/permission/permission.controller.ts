@@ -1,15 +1,18 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiParam, ApiTags } from '@nestjs/swagger';
 
 import { infinityPagination } from '@/utils';
 import { InfinityPaginationResponse, InfinityPaginationResponseDto } from '@/utils/dto';
 
+import { Permissions } from '../auth/decorators';
 import { Permission } from './domain';
 import { CreatePermissionDto, QueryPermissionDto } from './dto';
 import { PermissionService } from './permission.service';
 
 @ApiBearerAuth()
 @ApiTags('Permissions')
+@UseGuards(AuthGuard('jwt'))
 @Controller({
   path: 'permission',
   version: '1',
@@ -30,6 +33,7 @@ export class PermissionController {
   @ApiOkResponse({
     type: InfinityPaginationResponse(Permission),
   })
+  @Permissions('read_user')
   @Get()
   @HttpCode(HttpStatus.OK)
   async findAll(@Query() query: QueryPermissionDto): Promise<InfinityPaginationResponseDto<Permission>> {

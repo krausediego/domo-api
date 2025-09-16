@@ -6,6 +6,9 @@ import { appConfig } from '@/config';
 import * as schema from '@/database/schemas';
 import { mailConfig } from '@/mail';
 
+import { AuthModule } from './modules/auth/auth.module';
+import { authConfig } from './modules/auth/config';
+import { EnterpriseModule } from './modules/enterprise/enterprise.module';
 import { EnterpriseUserModule } from './modules/enterprise-user/enterprise-user.module';
 import { PermissionModule } from './modules/permission/permission.module';
 import { RoleModule } from './modules/role/role.module';
@@ -15,7 +18,7 @@ import { SessionModule } from './modules/session/session.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, mailConfig],
+      load: [appConfig, mailConfig, authConfig],
       envFilePath: ['.env'],
     }),
     DrizzlePostgresModule.register({
@@ -27,8 +30,10 @@ import { SessionModule } from './modules/session/session.module';
         schema,
       },
     }),
+    AuthModule,
     SessionModule,
     EnterpriseUserModule,
+    EnterpriseModule,
     RoleModule,
     PermissionModule,
   ],

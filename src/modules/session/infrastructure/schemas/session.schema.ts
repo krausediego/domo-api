@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import { relations, sql } from 'drizzle-orm';
+import { relations } from 'drizzle-orm';
 import { boolean, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 import { enterpriseUsersSchema } from '@/modules/enterprise-user/infrastructure/schemas';
@@ -19,7 +19,7 @@ export const sessionsSchema = pgTable('sessions', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true })
     .defaultNow()
-    .$onUpdate(() => sql`(CURRENT_TIMESTAMP)`)
+    .$onUpdate(() => new Date())
     .notNull(),
 });
 

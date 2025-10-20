@@ -1,10 +1,12 @@
+import { Enterprise } from '@/modules/enterprise/domain';
 import { Permission } from '@/modules/permission/domain';
 
 export class Role {
   id: string;
+  enterpriseId: Enterprise['id'];
   name: string;
-  slug: string;
-  active: boolean;
+  status: boolean;
+  editable: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

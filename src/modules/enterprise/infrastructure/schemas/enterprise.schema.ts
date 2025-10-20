@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { relations } from 'drizzle-orm';
 import { pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
+import { rolesSchema } from '@/database/schemas';
 import { enterpriseUsersSchema } from '@/modules/enterprise-user/infrastructure/schemas';
 
 export const enterprisesSchema = pgTable('enterprises', {
@@ -23,4 +24,5 @@ export const enterprisesSchema = pgTable('enterprises', {
 
 export const enterprisesRelations = relations(enterprisesSchema, ({ many }) => ({
   enterpriseUsers: many(enterpriseUsersSchema),
+  roles: many(rolesSchema),
 }));

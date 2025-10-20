@@ -83,7 +83,7 @@ export class AuthService {
   async refreshToken(data: Pick<JwtRefreshPayloadType, 'sessionId' | 'hash'>): Promise<LoginResponseDto> {
     const session = await this.sessionService.findById(data.sessionId);
 
-    if (!session) {
+    if (!session?.active) {
       throw new UnauthorizedException();
     }
 
@@ -125,9 +125,13 @@ export class AuthService {
     };
   }
 
+  async logout(sessionId: Session['id']): Promise<void> {
+    await this.sessionService.inactivateById(sessionId);
+  }
+
   private async getTokensData(data: {
     user: EnterpriseUser;
-    roles: Pick<Role, 'id' | 'slug'>[];
+    roles: Pick<Role, 'id' | 'name'>[];
     permissions: Permission['slug'][];
     sessionId: Session['id'];
     hash: Session['hash'];

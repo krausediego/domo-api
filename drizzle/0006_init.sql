@@ -1,0 +1,1 @@
+ALTER TABLE "roles" ALTER COLUMN "enterprise_id" SET NOT NULL;

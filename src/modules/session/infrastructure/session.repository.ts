@@ -76,8 +76,6 @@ export class SessionRepository {
       throw new Error('Session not found');
     }
 
-    console.log('session', payload);
-
     const [updatedSession] = await this.database
       .update(schema.sessionsSchema)
       .set({

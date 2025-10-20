@@ -14,7 +14,7 @@ import { PermissionService } from './permission.service';
 @ApiTags('Permissions')
 @UseGuards(AuthGuard('jwt'))
 @Controller({
-  path: 'permission',
+  path: 'permissions',
   version: '1',
 })
 export class PermissionController {
@@ -33,7 +33,7 @@ export class PermissionController {
   @ApiOkResponse({
     type: InfinityPaginationResponse(Permission),
   })
-  @Permissions('read_user')
+  @Permissions('read_users')
   @Get()
   @HttpCode(HttpStatus.OK)
   async findAll(@Query() query: QueryPermissionDto): Promise<InfinityPaginationResponseDto<Permission>> {

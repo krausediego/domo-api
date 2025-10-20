@@ -8,7 +8,7 @@ export type JwtPayloadType = {
   sub: EnterpriseUser['id'];
   enterpriseId: Enterprise['id'];
   sessionId: Session['id'];
-  roles: Pick<Role, 'id' | 'slug'>[];
+  roles: Pick<Role, 'id' | 'name'>[];
   permissions: Permission['slug'][];
   iat: number;
   exp: number;

@@ -1,10 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { ArrayMinSize, IsArray, IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { ArrayMinSize, IsArray, IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 
 import { lowerCaseTransformer } from '@/utils/transformers';
 
-export class CreateUserDto {
+export class CreateUserWithNewEnterpriseDto {
   @ApiProperty({
     example: 'test1@example.com',
     type: String,
@@ -15,17 +15,13 @@ export class CreateUserDto {
   email: string;
 
   @ApiProperty()
+  @MinLength(8)
+  password: string;
+
+  @ApiProperty()
   @IsArray()
   @IsString({ each: true })
   @ArrayMinSize(1)
   @IsNotEmpty()
   roles: string[];
-
-  @ApiProperty()
-  @IsString()
-  name: string;
-
-  @ApiProperty()
-  @IsString()
-  cellPhone: string;
 }

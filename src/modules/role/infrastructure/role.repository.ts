@@ -1,13 +1,15 @@
 import { Inject } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import * as schema from '@/database/schemas';
+import { Enterprise } from '@/modules/enterprise/domain';
 import { Permission } from '@/modules/permission/domain';
 import { flattenManyToMany } from '@/utils';
 import { IPaginationOptions, UndefinedType } from '@/utils/types';
 
 import { Role, RoleWithRelations } from '../domain/role';
+import { CreateRoleDto, UpdateRoleDto } from '../dto';
 
 const { rolesSchema, rolePermissionsSchema } = schema;
 
@@ -29,12 +31,14 @@ export class RoleRepository {
    */
   async findManyWithPagination({
     paginationOptions,
+    enterpriseId,
   }: {
     paginationOptions: IPaginationOptions;
+    enterpriseId: string;
   }): Promise<RoleWithRelations[]> {
     const role = await this.database.query.rolesSchema.findMany({
-      where(fields, { eq }) {
-        return eq(fields.active, true);
+      where(fields, { eq, and }) {
+        return and(eq(fields.status, true), eq(fields.enterpriseId, enterpriseId));
       },
       with: {
         rolePermission: {
@@ -44,6 +48,7 @@ export class RoleRepository {
               columns: {
                 id: true,
                 slug: true,
+                name: true,
               },
             },
           },
@@ -96,43 +101,6 @@ export class RoleRepository {
   }
 
   /**
-   * Find role by slug
-   *
-   * @async
-   * @param slug {Role['slug']}
-   *
-   * @returns {Promise<UndefinedType<RoleWithRelations>>}
-   *
-   * @throws {Error}
-   */
-  async findBySlug(slug: Role['slug']): Promise<UndefinedType<RoleWithRelations>> {
-    const role = await this.database.query.rolesSchema.findFirst({
-      where(fields, { eq }) {
-        return eq(fields.slug, slug);
-      },
-      with: {
-        rolePermission: {
-          columns: {},
-          with: {
-            permission: {
-              columns: {
-                id: true,
-                slug: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    if (role) {
-      const [flattenData] = flattenManyToMany([role], 'rolePermission', 'permission', 'permissions', 'id');
-
-      return flattenData;
-    }
-  }
-
-  /**
    * Create a new role
    *
    * @async
@@ -143,13 +111,13 @@ export class RoleRepository {
    *
    * @throws {Error}
    */
-  async create(data: Pick<Role, 'name' | 'slug'>, permissionsIds: Permission['id'][]): Promise<RoleWithRelations> {
+  async create(data: CreateRoleDto): Promise<RoleWithRelations> {
     const [role] = await this.database
       .insert(rolesSchema)
       .values({ ...data })
       .returning({ id: rolesSchema.id });
 
-    const permissionsInsertData = permissionsIds.map((permissionId) => {
+    const permissionsInsertData = data.permissionsIds.map((permissionId) => {
       return {
         roleId: role.id,
         permissionId,
@@ -197,14 +165,62 @@ export class RoleRepository {
    *
    * @throws {Error}
    */
-  async update(id: Role['id'], payload: Partial<Role>): Promise<Role> {
-    const [role] = await this.database
-      .update(rolesSchema)
-      .set({ ...payload })
-      .where(eq(rolesSchema.id, id))
-      .returning();
+  async update(
+    payload: UpdateRoleDto,
+    roleId: Role['id'],
+    enterpriseId: Enterprise['id'],
+  ): Promise<RoleWithRelations[]> {
+    return await this.database.transaction(async (tx) => {
+      await tx
+        .update(rolesSchema)
+        .set({ ...payload })
+        .where(and(eq(rolesSchema.id, roleId), eq(rolesSchema.enterpriseId, enterpriseId)));
 
-    return role;
+      const currentRows = await tx
+        .select({ permissionId: rolePermissionsSchema.permissionId })
+        .from(rolePermissionsSchema)
+        .where(eq(rolePermissionsSchema.roleId, roleId));
+
+      const current = new Set(currentRows.map((row) => row.permissionId));
+      const desiredSet = new Set(payload.permissionsIds);
+
+      const toAdd = [...desiredSet].filter((id) => !current.has(id));
+      const toRemove = [...current].filter((id) => !desiredSet.has(id));
+
+      if (toAdd.length > 0) {
+        await tx
+          .insert(rolePermissionsSchema)
+          .values(toAdd.map((pid) => ({ roleId, permissionId: pid })))
+          .onConflictDoNothing();
+      }
+
+      if (toRemove.length > 0) {
+        await tx
+          .delete(rolePermissionsSchema)
+          .where(and(eq(rolePermissionsSchema.roleId, roleId), inArray(rolePermissionsSchema.permissionId, toRemove)));
+      }
+
+      const final = await tx.query.rolesSchema.findMany({
+        where(fields, { eq }) {
+          return eq(fields.id, roleId);
+        },
+        with: {
+          rolePermission: {
+            columns: {},
+            with: {
+              permission: {
+                columns: {
+                  id: true,
+                  slug: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      return flattenManyToMany(final, 'rolePermission', 'permission', 'permissions', 'id');
+    });
   }
 
   /**

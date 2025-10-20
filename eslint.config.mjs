@@ -45,6 +45,7 @@ export default defineConfig(
       '@typescript-eslint/no-unsafe-member-access': 'off',
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
+      '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '^_' }],
       'prettier/prettier': [
         'error',
         {

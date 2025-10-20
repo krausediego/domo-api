@@ -10,11 +10,12 @@ export class EnterpriseUser {
   blocked: boolean;
   tempPassword: boolean;
   emailConfirmed: boolean;
+  deleted: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export class EnterpriseUserWithRelations extends EnterpriseUser {
   enterpriseUserProfile: EnterpriseUserProfile | null;
-  roles: Pick<Role, 'id' | 'slug'>[];
+  roles: Pick<Role, 'id' | 'name'>[];
 }

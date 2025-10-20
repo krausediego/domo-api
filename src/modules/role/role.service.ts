@@ -2,13 +2,18 @@ import { HttpStatus, Injectable, UnprocessableEntityException } from '@nestjs/co
 
 import { IPaginationOptions } from '@/utils/types';
 
-import { Permission } from '../permission/domain';
+import { Enterprise } from '../enterprise/domain';
+import { PermissionService } from '../permission/permission.service';
 import { Role, RoleWithRelations } from './domain/role';
+import { CreateRoleDto, UpdateRoleDto } from './dto';
 import { RoleRepository } from './infrastructure';
 
 @Injectable()
 export class RoleService {
-  constructor(private readonly roleRepository: RoleRepository) {}
+  constructor(
+    private readonly roleRepository: RoleRepository,
+    private readonly permissionService: PermissionService,
+  ) {}
 
   /**
    * Find many roles with pagination
@@ -22,10 +27,12 @@ export class RoleService {
    */
   async findManyWithPagination({
     paginationOptions,
+    enterpriseId,
   }: {
     paginationOptions: IPaginationOptions;
+    enterpriseId: Enterprise['id'];
   }): Promise<RoleWithRelations[]> {
-    return this.roleRepository.findManyWithPagination({ paginationOptions });
+    return this.roleRepository.findManyWithPagination({ paginationOptions, enterpriseId });
   }
 
   /**
@@ -53,17 +60,34 @@ export class RoleService {
   }
 
   /**
-   * Find role by slug
+   * Create a new role
    *
    * @async
-   * @param slug {Role['slug']}
+   * @param data {Pick<Role, 'name' | 'enterpriseId'>}
+   * @param permissionsIds {Permission['id'][]}
    *
    * @returns {Promise<RoleWithRelations>}
    *
    * @throws {Error}
    */
-  async findBySlug(slug: Role['slug']): Promise<RoleWithRelations> {
-    const role = await this.roleRepository.findBySlug(slug);
+  async create(data: CreateRoleDto): Promise<RoleWithRelations> {
+    return this.roleRepository.create(data);
+  }
+
+  /**
+   * Update a role
+   *
+   * @async
+   * @param data {UpdateRoleDto}
+   * @param roleId {Role['id']}
+   * @param enterpriseId {Enterprise['id']}
+   *
+   * @returns {Promise<Role>}
+   *
+   * @throws {Error}
+   */
+  async update(data: UpdateRoleDto, roleId: Role['id'], enterpriseId: Enterprise['id']): Promise<RoleWithRelations[]> {
+    const role = await this.roleRepository.findById(roleId);
 
     if (!role) {
       throw new UnprocessableEntityException({
@@ -74,21 +98,21 @@ export class RoleService {
       });
     }
 
-    return role;
-  }
+    const permissions = Array.from(new Set(data.permissionsIds ?? []));
 
-  /**
-   * Create a new role
-   *
-   * @async
-   * @param data {Pick<Role, 'name' | 'slug'>}
-   * @param permissionsIds {Permission['id'][]}
-   *
-   * @returns {Promise<RoleWithRelations>}
-   *
-   * @throws {Error}
-   */
-  async create(data: Pick<Role, 'name' | 'slug'>, permissionsIds: Permission['id'][]): Promise<RoleWithRelations> {
-    return this.roleRepository.create(data, permissionsIds);
+    if (permissions.length) {
+      const permissionsFinded = await this.permissionService.findByArrayIds(permissions);
+
+      if (permissionsFinded.length !== permissions.length) {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          errors: {
+            permission: 'oneOrMorePermissionsNotFound',
+          },
+        });
+      }
+    }
+
+    return this.roleRepository.update(data, roleId, enterpriseId);
   }
 }

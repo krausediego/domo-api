@@ -125,4 +125,19 @@ export class PermissionService {
   async update(id: Permission['id'], payload: Partial<Permission>): Promise<Permission> {
     return this.permissionRepository.update(id, payload);
   }
+
+  /**
+   * Exists permissions by array of ids
+   *
+   * @async
+   *
+   * @param ids {Permission['id'][]}
+   *
+   * @returns {Promise<{ id: Permission['id'] }[]>}
+   *
+   * @throws {Error}
+   */
+  findByArrayIds(ids: Permission['id'][]): Promise<{ id: Permission['id'] }[]> {
+    return this.permissionRepository.findByArrayIds(ids);
+  }
 }

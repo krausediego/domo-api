@@ -24,6 +24,7 @@ export const enterpriseUsersSchema = pgTable('enterprise_users', {
   tempPassword: boolean('temp_password').notNull().default(true),
   isSuperUser: boolean('is_super_user').notNull().default(false),
   emailConfirmed: boolean('email_confirmed').notNull().default(false),
+  deleted: boolean('deleted').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true })
     .defaultNow()

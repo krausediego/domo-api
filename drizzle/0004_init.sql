@@ -1,0 +1,1 @@
+ALTER TABLE "enterprise_users" ADD COLUMN "deleted" boolean DEFAULT false NOT NULL;

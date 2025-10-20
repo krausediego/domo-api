@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import * as schema from '@/database/schemas';
@@ -151,5 +151,23 @@ export class PermissionRepository {
       .returning();
 
     return updatedPermission;
+  }
+
+  /**
+   * Exists permissions by array of ids
+   *
+   * @async
+   *
+   * @param ids {Permission['id'][]}
+   *
+   * @returns {Promise<{ id: Permission['id'] }[]>}
+   *
+   * @throws {Error}
+   */
+  async findByArrayIds(ids: Permission['id'][]): Promise<{ id: Permission['id'] }[]> {
+    return this.database
+      .select({ id: schema.permissionsSchema.id })
+      .from(schema.permissionsSchema)
+      .where(inArray(schema.permissionsSchema.id, ids));
   }
 }

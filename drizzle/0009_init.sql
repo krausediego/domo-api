@@ -1,0 +1,1 @@
+ALTER TABLE "roles" ADD COLUMN "editable" boolean DEFAULT true NOT NULL;

@@ -1,17 +1,21 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiOkResponse, ApiParam, ApiTags } from '@nestjs/swagger';
 
 import { infinityPagination } from '@/utils';
 import { InfinityPaginationResponse, InfinityPaginationResponseDto } from '@/utils/dto';
 
+import { CurrentEnterpriseId } from '../auth/decorators';
+import { Enterprise } from '../enterprise/domain';
 import { Role, RoleWithRelations } from './domain/role';
-import { CreateRoleDto, QueryRoleDto } from './dto';
+import { CreateRoleDto, QueryRoleDto, UpdateRoleDto } from './dto';
 import { RoleService } from './role.service';
 
 @ApiBearerAuth()
 @ApiTags('Roles')
+@UseGuards(AuthGuard('jwt'))
 @Controller({
-  path: 'role',
+  path: 'roles',
   version: '1',
 })
 export class RoleController {
@@ -32,7 +36,10 @@ export class RoleController {
   })
   @Get()
   @HttpCode(HttpStatus.OK)
-  async findAll(@Query() query: QueryRoleDto): Promise<InfinityPaginationResponseDto<RoleWithRelations>> {
+  async findAll(
+    @Query() query: QueryRoleDto,
+    @CurrentEnterpriseId() enterpriseId: string,
+  ): Promise<InfinityPaginationResponseDto<RoleWithRelations>> {
     const page = query?.page ?? 1;
     let limit = query?.limit ?? 10;
 
@@ -46,6 +53,7 @@ export class RoleController {
           page,
           limit,
         },
+        enterpriseId,
       }),
       { page, limit },
     );
@@ -90,7 +98,38 @@ export class RoleController {
   })
   @Post()
   @HttpCode(HttpStatus.OK)
-  async create(@Body() { name, slug, permissionsIds }: CreateRoleDto): Promise<RoleWithRelations> {
-    return this.roleService.create({ name, slug }, permissionsIds);
+  async create(@Body() data: CreateRoleDto, @CurrentEnterpriseId() enterpriseId: string): Promise<RoleWithRelations> {
+    return this.roleService.create({ ...data, enterpriseId });
+  }
+
+  /**
+   * Update a Role
+   *
+   * @async
+   *
+   * @param data {UpdateRoleDto}
+   * @param roleId {Role['id']}
+   * @param enterpriseId {Enterprise['id']}
+   *
+   * @returns {Promise<Role>}
+   *
+   * @throws {Error}
+   */
+  @ApiOkResponse({
+    type: Role,
+  })
+  @Patch(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiParam({
+    name: 'id',
+    type: String,
+    required: true,
+  })
+  update(
+    @Body() data: UpdateRoleDto,
+    @Param('id') roleId: Role['id'],
+    @CurrentEnterpriseId() enterpriseId: Enterprise['id'],
+  ): Promise<RoleWithRelations[]> {
+    return this.roleService.update(data, roleId, enterpriseId);
   }
 }

@@ -1,6 +1,17 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Request, SerializeOptions, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Request,
+  Res,
+  SerializeOptions,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
 
 import { AuthService } from './auth.service';
 import { AuthLoginDto, LoginResponseDto, RefreshResponseDto } from './dto';
@@ -21,8 +32,18 @@ export class AuthController {
     type: LoginResponseDto,
   })
   @HttpCode(HttpStatus.OK)
-  async login(@Body() loginDto: AuthLoginDto): Promise<LoginResponseDto> {
-    return this.authService.validateLogin(loginDto);
+  async login(
+    @Body() loginDto: AuthLoginDto,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<Omit<LoginResponseDto, 'refreshToken'>> {
+    const { refreshToken, ...rest } = await this.authService.validateLogin(loginDto);
+
+    // Set refreshToken in cookies.
+    response.cookie('refreshToken', refreshToken);
+
+    return {
+      ...rest,
+    };
   }
 
   @ApiBearerAuth()
@@ -32,11 +53,28 @@ export class AuthController {
   @Post('refresh')
   @UseGuards(AuthGuard('jwt-refresh'))
   @HttpCode(HttpStatus.OK)
-  async refresh(@Request() request): Promise<RefreshResponseDto> {
-    console.log('REQUEST', request.user);
-    return this.authService.refreshToken({
+  async refresh(
+    @Request() request,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<Omit<RefreshResponseDto, 'refreshToken'>> {
+    const { refreshToken, ...rest } = await this.authService.refreshToken({
       sessionId: request.user.sessionId,
       hash: request.user.hash,
     });
+
+    // Set refreshToken in cookies.
+    response.cookie('refreshToken', refreshToken);
+
+    return {
+      ...rest,
+    };
+  }
+
+  @ApiBearerAuth()
+  @Post('logout')
+  @UseGuards(AuthGuard('jwt'))
+  @HttpCode(HttpStatus.NO_CONTENT)
+  public async logout(@Request() request): Promise<void> {
+    await this.authService.logout(request.user.sessionId);
   }
 }

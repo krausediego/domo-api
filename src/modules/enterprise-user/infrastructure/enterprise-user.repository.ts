@@ -1,11 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, exists } from 'drizzle-orm';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import * as schema from '@/database/schemas';
+import { Enterprise } from '@/modules/enterprise/domain';
 import { Role } from '@/modules/role/domain/role';
 import { flattenManyToMany } from '@/utils';
-import { UndefinedType } from '@/utils/types';
+import { IPaginationOptions, UndefinedType } from '@/utils/types';
 
 import { EnterpriseUser, EnterpriseUserProfile, EnterpriseUserWithRelations } from '../domain';
 
@@ -17,6 +18,70 @@ export class EnterpriseUserRepository {
     @Inject('DB')
     private readonly database: PostgresJsDatabase<typeof schema>,
   ) {}
+
+  /**
+   * Find many enterprise users with pagination
+   *
+   * @async
+   * @param paginationOptions {IPaginationOptions}
+   * @param userId {EnterpriseUser['id']}
+   * @param enterpriseId {Enterprise['id']}
+   *
+   * @returns {Promise<EnterpriseUserWithRelations[]>}
+   *
+   * @throws {Error}
+   */
+  async findManyWithPagination({
+    paginationOptions,
+    // userId,
+    enterpriseId,
+    search,
+  }: {
+    paginationOptions: IPaginationOptions;
+    userId: EnterpriseUser['id'];
+    enterpriseId: Enterprise['id'];
+    search?: string;
+  }): Promise<Omit<EnterpriseUserWithRelations, 'password'>[]> {
+    const users = await this.database.query.enterpriseUsersSchema.findMany({
+      with: {
+        enterpriseUserProfile: true,
+        enterpriseUserRole: {
+          with: {
+            role: {
+              columns: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+      where: (user, { eq, not, and, ilike }) =>
+        and(
+          eq(user.enterpriseId, enterpriseId),
+          not(eq(user.deleted, true)),
+          search
+            ? exists(
+                this.database
+                  .select({ id: enterpriseUserProfilesSchema.userId })
+                  .from(enterpriseUserProfilesSchema)
+                  .where(
+                    and(
+                      eq(enterpriseUserProfilesSchema.userId, user.id),
+                      ilike(enterpriseUserProfilesSchema.name, `%${search.trim()}%`),
+                    ),
+                  ),
+              )
+            : undefined,
+        ),
+      limit: paginationOptions.limit,
+      offset: (paginationOptions.page - 1) * paginationOptions.limit,
+    });
+
+    const flattenData = flattenManyToMany(users, 'enterpriseUserRole', 'role', 'roles', 'name');
+
+    return flattenData;
+  }
 
   /**
    * Find user by email
@@ -40,7 +105,7 @@ export class EnterpriseUserRepository {
             role: {
               columns: {
                 id: true,
-                slug: true,
+                name: true,
               },
             },
           },
@@ -49,7 +114,7 @@ export class EnterpriseUserRepository {
     });
 
     if (user) {
-      const [flattenData] = flattenManyToMany([user], 'enterpriseUserRole', 'role', 'roles', 'slug');
+      const [flattenData] = flattenManyToMany([user], 'enterpriseUserRole', 'role', 'roles', 'name');
 
       return flattenData;
     }
@@ -77,7 +142,7 @@ export class EnterpriseUserRepository {
             role: {
               columns: {
                 id: true,
-                slug: true,
+                name: true,
               },
             },
           },
@@ -86,7 +151,7 @@ export class EnterpriseUserRepository {
     });
 
     if (user) {
-      const [flattenData] = flattenManyToMany([user], 'enterpriseUserRole', 'role', 'roles', 'slug');
+      const [flattenData] = flattenManyToMany([user], 'enterpriseUserRole', 'role', 'roles', 'name');
 
       return flattenData;
     }
@@ -139,7 +204,7 @@ export class EnterpriseUserRepository {
             role: {
               columns: {
                 id: true,
-                slug: true,
+                name: true,
               },
             },
           },
@@ -148,7 +213,7 @@ export class EnterpriseUserRepository {
     });
 
     if (user) {
-      const [flattenData] = flattenManyToMany([user], 'enterpriseUserRole', 'role', 'roles', 'slug');
+      const [flattenData] = flattenManyToMany([user], 'enterpriseUserRole', 'role', 'roles', 'name');
 
       return flattenData;
     }
@@ -181,7 +246,7 @@ export class EnterpriseUserRepository {
             role: {
               columns: {
                 id: true,
-                slug: true,
+                name: true,
               },
             },
           },
@@ -190,7 +255,7 @@ export class EnterpriseUserRepository {
     });
 
     if (user) {
-      const [flattenData] = flattenManyToMany([user], 'enterpriseUserRole', 'role', 'roles', 'slug');
+      const [flattenData] = flattenManyToMany([user], 'enterpriseUserRole', 'role', 'roles', 'name');
 
       return flattenData;
     }
@@ -215,5 +280,36 @@ export class EnterpriseUserRepository {
       .returning();
 
     return userProfile;
+  }
+
+  /**
+   * Update user by userId
+   *
+   * @async
+   * @param userId {EnterpriseUser['id']}
+   * @param data {Partial<EnterpriseUser>}
+   *
+   * @returns {Promise<EnterpriseUser>}
+   *
+   * @throws {Error}
+   */
+  async update(userId: EnterpriseUser['id'], data: Partial<EnterpriseUser>): Promise<EnterpriseUser> {
+    const enterpriseUser = await this.database.query.enterpriseUsersSchema.findFirst({
+      where(fields, { eq }) {
+        return eq(fields.id, userId);
+      },
+    });
+
+    if (!enterpriseUser) {
+      throw new Error('Enterprise user not found');
+    }
+
+    const [updatedEnterpriseUser] = await this.database
+      .update(schema.enterpriseUsersSchema)
+      .set({ ...data })
+      .where(eq(schema.enterpriseUsersSchema.id, userId))
+      .returning();
+
+    return updatedEnterpriseUser;
   }
 }

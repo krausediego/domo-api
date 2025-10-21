@@ -49,6 +49,7 @@ export default defineConfig(
       'prettier/prettier': [
         'error',
         {
+          endOfLine: 'auto',
           singleQuote: true,
           trailingComma: 'all',
           printWidth: 120,

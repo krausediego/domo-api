@@ -4,13 +4,18 @@ import bcrypt from 'bcryptjs';
 import { IPaginationOptions, UndefinedType } from '@/utils/types';
 
 import { Enterprise } from '../enterprise/domain';
+import { Role } from '../role/domain/role';
+import { RoleService } from '../role/role.service';
 import { EnterpriseUser, EnterpriseUserWithRelations } from './domain';
 import { CreateUserWithNewEnterpriseDto } from './dto';
 import { EnterpriseUserRepository } from './infrastructure';
 
 @Injectable()
 export class EnterpriseUserService {
-  constructor(private enterpriseUserRepository: EnterpriseUserRepository) {}
+  constructor(
+    private enterpriseUserRepository: EnterpriseUserRepository,
+    private roleService: RoleService,
+  ) {}
 
   /**
    * Find many enterprise users with pagination
@@ -126,5 +131,34 @@ export class EnterpriseUserService {
         await this.enterpriseUserRepository.addUserRoleById(user.id, roleId);
       }),
     );
+  }
+
+  /**
+   * Find all users by roleId
+   *
+   * @async
+   * @param roleId {Role['id']}
+   * @param enterpriseId {Enterprise['id']}
+   *
+   * @returns {Promise<Omit<EnterpriseUserWithRelations, 'password'>[]>}
+   *
+   * @throws {Error}
+   */
+  async findEnterpriseUsersByRoleId(
+    roleId: Role['id'],
+    enterpriseId: Enterprise['id'],
+  ): Promise<Omit<EnterpriseUserWithRelations, 'password'>[]> {
+    const role = await this.roleService.findById(roleId);
+
+    if (!role) {
+      throw new UnprocessableEntityException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        errors: {
+          permission: 'roleNotFound',
+        },
+      });
+    }
+
+    return this.enterpriseUserRepository.findEnterpriseUsersByRoleId(roleId, enterpriseId);
   }
 }

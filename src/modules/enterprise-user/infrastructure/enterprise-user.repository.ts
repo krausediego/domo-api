@@ -43,6 +43,7 @@ export class EnterpriseUserRepository {
     search?: string;
   }): Promise<Omit<EnterpriseUserWithRelations, 'password'>[]> {
     const users = await this.database.query.enterpriseUsersSchema.findMany({
+      columns: { password: false },
       with: {
         enterpriseUserProfile: true,
         enterpriseUserRole: {
@@ -311,5 +312,49 @@ export class EnterpriseUserRepository {
       .returning();
 
     return updatedEnterpriseUser;
+  }
+
+  /**
+   * Find all users by roleId
+   *
+   * @async
+   * @param roleId {Role['id']}
+   * @param enterpriseId {Enterprise['id']}
+   *
+   * @returns {Promise<Omit<EnterpriseUserWithRelations, 'password'>[]>}
+   *
+   * @throws {Error}
+   */
+  async findEnterpriseUsersByRoleId(
+    roleId: Role['id'],
+    enterpriseId: Enterprise['id'],
+  ): Promise<Omit<EnterpriseUserWithRelations, 'password'>[]> {
+    const enterpriseUsers = await this.database.query.enterpriseUsersSchema.findMany({
+      columns: { password: false },
+      where(fields, { eq }) {
+        return eq(fields.enterpriseId, enterpriseId);
+      },
+      with: {
+        enterpriseUserRole: {
+          columns: {},
+          where(fields, { eq }) {
+            return eq(fields.roleId, roleId);
+          },
+          with: {
+            role: {
+              columns: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        enterpriseUserProfile: true,
+      },
+    });
+
+    const flattenData = flattenManyToMany(enterpriseUsers, 'enterpriseUserRole', 'role', 'roles', 'name');
+
+    return flattenData;
   }
 }
